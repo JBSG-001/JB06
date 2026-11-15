@@ -51,7 +51,7 @@ export default function SystemHealthPage() {
 
   if (!canAccessDevTools) {
     return (
-      <div className="p-8 max-w-2xl mx-auto my-16 text-center bg-white border border-[#E8E8E4] rounded-[12px] p-10 space-y-4 shadow-sm">
+      <div className="max-w-2xl mx-auto my-16 text-center bg-white border border-[#E8E8E4] rounded-[12px] p-10 space-y-4 shadow-sm">
         <div className="w-12 h-12 rounded-full bg-[#FEF2F2] text-[#DC2626] flex items-center justify-center mx-auto border border-[#FECACA]">
           <Lock className="w-6 h-6" />
         </div>
