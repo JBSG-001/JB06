@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { prisma } from '@jb06/db';
 import { PriceDisplay, Badge } from '@jb06/ui';
-import { ArrowRight, Play, ShieldCheck, RefreshCw, Truck } from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 
 export const revalidate = 60; // ISR cache 60s
 
@@ -293,52 +293,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 6. TRUST & SETTLEMENT GUARANTEES */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 bg-[#FAFAF8] border border-[#E8E8E4] rounded-[12px]">
-          <div className="flex items-start gap-4">
-            <div className="p-2.5 bg-white border border-[#E8E8E4] rounded-full text-[#111111]">
-              <Truck className="w-5 h-5 text-[#B8912F]" />
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#111111]">
-                Complimentary Worldwide Delivery
-              </h4>
-              <p className="text-xs text-[#6B6B6B] mt-1">
-                Priority express couriers dispatch on all orders over $100 (approx. ₱5,800 PHP). Fully insured with signature release.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4">
-            <div className="p-2.5 bg-white border border-[#E8E8E4] rounded-full text-[#111111]">
-              <RefreshCw className="w-5 h-5 text-[#B8912F]" />
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#111111]">
-                30-Day Effortless Returns
-              </h4>
-              <p className="text-xs text-[#6B6B6B] mt-1">
-                Atelier pickup service with automated carbon-neutral return manifests or complimentary bespoke size exchanges.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-4">
-            <div className="p-2.5 bg-white border border-[#E8E8E4] rounded-full text-[#111111]">
-              <ShieldCheck className="w-5 h-5 text-[#B8912F]" />
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-[#111111]">
-                Encrypted Direct Settlement
-              </h4>
-              <p className="text-xs text-[#6B6B6B] mt-1">
-                Native PHP checkout with GCash, alongside international USD processing via Apple Pay, PayPal, and EasyMastercard.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* 7. CONFIDENTIAL LEDGER SIGNUP */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
