@@ -24,7 +24,11 @@ import {
 
 export const ConsoleSidebar: React.FC = () => {
   const pathname = usePathname();
-  const { role, user, switchRole, canAccessDevTools } = useConsoleAuth();
+  const { role, user, switchRole, canAccessDevTools, logout } = useConsoleAuth();
+
+  if (pathname?.startsWith('/login')) {
+    return null;
+  }
 
   const navOperations = [
     { name: 'Live Monitor', href: '/live-monitor', icon: Activity, badge: 'Live', isLive: true },
@@ -205,16 +209,28 @@ export const ConsoleSidebar: React.FC = () => {
           <span className="text-[10px] text-[#A0A09C] font-mono">v2.4.1</span>
         </div>
 
-        {/* Quick Role Switch Toggle (Devon <-> Sarah) */}
-        <button
-          type="button"
-          onClick={switchRole}
-          className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white border border-[#E8E8E4] hover:border-[#111111] rounded-[6px] text-[11px] font-medium text-[#111111] transition-colors"
-          title="Switch role between DEVELOPER and STAFF to verify permissions"
-        >
-          <RefreshCw className="w-3 h-3 text-[#B8912F]" />
-          <span>Switch Role ({role === 'DEVELOPER' ? 'Staff View' : 'Developer View'})</span>
-        </button>
+        {/* Quick Role Switch Toggle & Sign Out */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={switchRole}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white border border-[#E8E8E4] hover:border-[#111111] rounded-[6px] text-[11px] font-medium text-[#111111] transition-colors"
+            title="Switch role between DEVELOPER and STAFF to verify permissions"
+          >
+            <RefreshCw className="w-3 h-3 text-[#B8912F]" />
+            <span>{role === 'DEVELOPER' ? 'Staff View' : 'Dev View'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={logout}
+            className="flex items-center justify-center gap-1.5 py-1.5 px-2.5 bg-white border border-[#E8E8E4] hover:border-[#C0392B] hover:text-[#C0392B] rounded-[6px] text-[11px] font-medium text-[#6B6B6B] transition-colors"
+            title="Sign out of console"
+          >
+            <LogOut className="w-3 h-3" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
     </aside>
   );
