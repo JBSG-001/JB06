@@ -1,0 +1,416 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  DEVELOPER
+  STAFF
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentGateway {
+  GCASH
+  PAYPAL
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum SettingMode {
+  MANUAL
+  AUTO
+}
+
+enum MovementType {
+  SALE
+  RESTOCK
+  RETURN
+  RESERVATION
+  RELEASE
+  ADJUSTMENT
+}
+
+enum POStatus {
+  DRAFT
+  ORDERED
+  RECEIVED
+  CANCELLED
+}
+
+enum ServiceName {
+  PAYPAL
+  PAYMONGO
+  SUPABASE
+  REALTIME
+}
+
+enum HealthStatus {
+  OPERATIONAL
+  DEGRADED
+  DOWN
+}
+
+enum LogSeverity {
+  INFO
+  WARN
+  ERROR
+  CRITICAL
+}
+
+// -----------------------------------------------------------------------------
+// USER & ACCESS
+// -----------------------------------------------------------------------------
+
+model Profile {
+  id        String   @id // Matches Supabase auth.users.id
+  email     String   @unique
+  fullName  String?
+  role      Role     @default(CUSTOMER)
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@map("profiles")
+}
+
+// -----------------------------------------------------------------------------
+// CATALOG
+// -----------------------------------------------------------------------------
+
+model Category {
+  id            String        @id @default(cuid())
+  name          String        @unique // "Shoes", "Clothes"
+  slug          String        @unique
+  description   String?
+  subcategories Subcategory[]
+  products      Product[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id          String    @id @default(cuid())
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String    // e.g. "Sneakers", "Boots", "T-Shirts"
+  slug        String
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([categoryId, slug])
+  @@map("subcategories")
+}
+
+model Product {
+  id            String      @id @default(cuid())
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id])
+  subcategoryId String
+  subcategory   Subcategory @relation(fields: [subcategoryId], references: [id])
+  title         String
+  slug          String      @unique
+  description   String
+  department    String      // "FOOTWEAR / RUNNER", "APPAREL / HEAVYWEIGHT JERSEY"
+  materials     String?     // Material specs
+  care          String?     // Care instructions
+  isArchival    Boolean     @default(false)
+  isFeatured    Boolean     @default(false)
+  badge         String?     // "NEW", "LOW STOCK", "RESTOCK", "LIMITED"
+  images        String[]    // URLs in Supabase product-images bucket
+  variants      Variant[]
+  orderItems    OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("products")
+}
+
+model Variant {
+  id           String              @id @default(cuid())
+  productId    String
+  product      Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku          String              @unique // e.g. "JB6-SNK-0142-42-BLK"
+  size         String              // e.g. "US 9.0 (EU 42)", "L", "M"
+  color        String              // e.g. "Obsidian / Gold", "Chalk White"
+  stock        Int                 @default(0) // On-hand available
+  reserved     Int                 @default(0) // Currently reserved
+  reservedUntil DateTime?          // Expiry of current active reservation hold
+  reorderLevel Int                 @default(5)
+  priceUSD     Int                 // Minor units (cents: $145.00 -> 14500)
+  pricePHP     Int?                // Minor units (centavos: ₱8,410.00 -> 841000). If null, computed from rate
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  orderItems   OrderItem[]
+  movements    StockMovement[]
+  poItems      PurchaseOrderItem[]
+
+  @@map("variants")
+}
+
+// -----------------------------------------------------------------------------
+// CUSTOMERS & ORDERS
+// -----------------------------------------------------------------------------
+
+model Customer {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  address   String?
+  city      String?
+  country   String   @default("PH")
+  tier      String   @default("Standard Collector") // e.g. "Tier 1 Collector"
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("customers")
+}
+
+model Order {
+  id                   String               @id @default(cuid())
+  orderNumber          Int                  @unique @default(autoincrement()) // e.g. 1042
+  customerId           String
+  customer             Customer             @relation(fields: [customerId], references: [id])
+  status               OrderStatus          @default(PENDING)
+  paymentMethod        PaymentGateway
+  chargedCurrency      String               @default("USD") // "USD" or "PHP"
+  exchangeRateSnapshot Decimal              @db.Decimal(10, 4) // e.g. 58.0000
+  subtotalUSD          Int                  // cents
+  discountUSD          Int                  @default(0) // cents
+  shippingUSD          Int                  @default(0) // cents
+  taxUSD               Int                  @default(0) // cents
+  totalUSD             Int                  // cents
+  subtotalPHP          Int                  // centavos
+  discountPHP          Int                  @default(0)
+  shippingPHP          Int                  @default(0)
+  taxPHP               Int                  @default(0)
+  totalPHP             Int                  // centavos
+  promoCode            String?
+  reservedUntil        DateTime?
+  paidAt               DateTime?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  items                OrderItem[]
+  payments             Payment[]
+  statusHistory        OrderStatusHistory[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id])
+  variantId    String
+  variant      Variant  @relation(fields: [variantId], references: [id])
+  quantity     Int      @default(1)
+  unitPriceUSD Int      // cents
+  unitPricePHP Int      // centavos
+  totalUSD     Int      // cents
+  totalPHP     Int      // centavos
+  createdAt    DateTime @default(now())
+
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus OrderStatus?
+  toStatus  OrderStatus
+  note      String?
+  changedBy String?     // User ID or "SYSTEM" or "PAYMONGO_WEBHOOK"
+  createdAt DateTime    @default(now())
+
+  @@map("order_status_history")
+}
+
+// -----------------------------------------------------------------------------
+// PAYMENTS & WEBHOOKS
+// -----------------------------------------------------------------------------
+
+model Payment {
+  id            String         @id @default(cuid())
+  orderId       String
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  gateway       PaymentGateway
+  transactionId String?        @unique
+  amount        Int            // Minor units (cents/centavos)
+  currency      String         // "USD" or "PHP"
+  status        PaymentStatus  @default(PENDING)
+  rawPayload    Json?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("payments")
+}
+
+model WebhookEvent {
+  id          String         @id @default(cuid())
+  eventId     String         @unique // Idempotency check: provider event ID
+  gateway     PaymentGateway
+  eventType   String
+  payload     Json
+  processedAt DateTime       @default(now())
+
+  @@map("webhook_events")
+}
+
+// -----------------------------------------------------------------------------
+// SUPPLY CHAIN & INVENTORY
+// -----------------------------------------------------------------------------
+
+model Supplier {
+  id             String          @id @default(cuid())
+  name           String
+  code           String          @unique // e.g. "SUP-KYOTO"
+  contactName    String?
+  email          String?
+  phone          String?
+  country        String?
+  leadTimeDays   Int             @default(14)
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@map("suppliers")
+}
+
+model PurchaseOrder {
+  id           String              @id @default(cuid())
+  poNumber     String              @unique // e.g. "PO-804"
+  supplierId   String
+  supplier     Supplier            @relation(fields: [supplierId], references: [id])
+  status       POStatus            @default(DRAFT)
+  totalCostUSD Int                 @default(0) // cents
+  note         String?
+  orderedAt    DateTime?
+  receivedAt   DateTime?
+  items        PurchaseOrderItem[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id               String        @id @default(cuid())
+  poId             String
+  purchaseOrder    PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
+  variantId        String
+  variant          Variant       @relation(fields: [variantId], references: [id])
+  quantityOrdered  Int
+  quantityReceived Int           @default(0)
+  unitCostUSD      Int           @default(0) // cents
+  createdAt        DateTime      @default(now())
+
+  @@map("purchase_order_items")
+}
+
+model StockMovement {
+  id          String       @id @default(cuid())
+  variantId   String
+  variant     Variant      @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  type        MovementType
+  quantity    Int          // Can be positive or negative
+  reason      String
+  referenceId String?      // Order ID or PO ID
+  performedBy String?      // User ID or "SYSTEM"
+  createdAt   DateTime     @default(now())
+
+  @@map("stock_movements")
+}
+
+// -----------------------------------------------------------------------------
+// OPERATIONS, TELEMETRY & SYSTEM
+// -----------------------------------------------------------------------------
+
+model Setting {
+  id        String      @id @default(cuid())
+  key       String      @unique // e.g. "EXCHANGE_RATE"
+  value     String      // e.g. "58.00"
+  mode      SettingMode @default(MANUAL)
+  updatedAt DateTime    @updatedAt
+
+  @@map("settings")
+}
+
+model ServiceStatus {
+  id          String       @id @default(cuid())
+  service     ServiceName  @unique
+  status      HealthStatus @default(OPERATIONAL)
+  latencyMs   Int          @default(20)
+  lastChecked DateTime     @default(now())
+
+  @@map("service_status")
+}
+
+model ErrorLog {
+  id        String      @id @default(cuid())
+  context   String      // "CHECKOUT", "WEBHOOK", "INVENTORY"
+  message   String
+  stack     String?
+  severity  LogSeverity @default(ERROR)
+  metadata  Json?
+  createdAt DateTime    @default(now())
+
+  @@map("error_logs")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  profile    Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String   // "UPDATE_STOCK", "REFUND_ORDER", "CHANGE_ROLE"
+  resource   String   // "Variant", "Order", "Profile"
+  resourceId String?
+  details    Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model ActivityEvent {
+  id        String   @id @default(cuid())
+  sessionId String   // Anonymous session ID (e.g. "visitor_8841")
+  eventType String   // "page_view", "product_view", "add_to_cart", "checkout_started"
+  path      String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@map("activity_events")
+}
+

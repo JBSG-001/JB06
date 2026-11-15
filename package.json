@@ -1,0 +1,23 @@
+{
+  "name": "jb06-mini-erp-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@12.21.0",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "start": "turbo run dev",
+    "start:prod": "turbo run start",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:generate": "pnpm --filter @jb06/db generate",
+    "db:migrate": "pnpm --filter @jb06/db migrate",
+    "db:push": "pnpm --filter @jb06/db push",
+    "db:seed": "pnpm --filter @jb06/db seed",
+    "db:studio": "pnpm --filter @jb06/db studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "typescript": "^5.7.3"
+  }
+}

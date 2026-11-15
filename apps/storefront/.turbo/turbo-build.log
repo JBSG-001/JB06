@@ -1,0 +1,12 @@
+$ next build
+   ▲ Next.js 15.1.7
+   - Environments: .env
+
+   Creating an optimized production build ...
+Failed to compile.
+
+Error: EPERM: operation not permitted, mkdir 'C:\Users\ACER\OneDrive\Desktop\3A Lessons\AntiGrave\JB06\apps\storefront\.next\types\app'
+
+
+> Build failed because of webpack errors
+[ELIFECYCLE] Command failed with exit code 1.
