@@ -434,8 +434,8 @@ async function main() {
       isFeatured: true,
       badge: 'ATELIER',
       images: [
-        'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80',
-        'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=800&q=80',
+        'https://images.unsplash.com/photo-1499971442178-8c10fdf5f6ac?w=800&q=80',
+        'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&q=80',
       ],
       priceUSD: 6500, // $65.00
       pricePHP: 377000, // ₱3,770.00
@@ -516,7 +516,10 @@ async function main() {
       isArchival: false,
       isFeatured: false,
       badge: null,
-      images: ['https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=800&q=80'],
+      images: [
+        'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800&q=80',
+        'https://images.unsplash.com/photo-1576188973526-0e5d7047b0cf?w=800&q=80',
+      ],
       priceUSD: 15500,
       pricePHP: 899000,
       prefix: 'JB6-HOD-0045',
