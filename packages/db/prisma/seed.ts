@@ -208,7 +208,10 @@ async function main() {
       isArchival: false,
       isFeatured: true,
       badge: 'RESTOCK',
-      images: ['https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?w=800&q=80'],
+      images: [
+        'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=800&q=80',
+        'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=800&q=80'
+      ],
       priceUSD: 16000,
       pricePHP: 928000,
       prefix: 'JB6-SNK-0210',
