@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AnnouncementBar } from '@/components/AnnouncementBar';
 import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
 import { CurrencyProvider } from '@/lib/currency';
 import { CartProvider } from '@/lib/cart';
 import { TelemetryTracker } from '@/components/TelemetryTracker';
@@ -35,7 +34,6 @@ export default function RootLayout({
             <AnnouncementBar />
             <Header />
             <main className="flex-1">{children}</main>
-            <Footer />
           </CartProvider>
         </CurrencyProvider>
       </body>
