@@ -1,5 +1,21 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "NEXT_PUBLIC_STOREFRONT_URL",
+    "NEXT_PUBLIC_CONSOLE_URL",
+    "PAYPAL_CLIENT_ID",
+    "PAYPAL_SECRET",
+    "PAYPAL_WEBHOOK_ID",
+    "PAYMONGO_SECRET_KEY",
+    "PAYMONGO_WEBHOOK_SECRET",
+    "CRON_SECRET",
+    "NODE_ENV"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -21,4 +37,3 @@
     }
   }
 }
-
